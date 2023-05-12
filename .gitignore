@@ -1,0 +1,9 @@
+## macos
+.DS_Store
+
+## node.js and npm
+node_modules
+package-lock.json
+
+## environment and secrets
+.env
