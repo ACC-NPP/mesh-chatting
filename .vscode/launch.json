@@ -7,8 +7,24 @@
 		{
 			"console": "integratedTerminal",
 			"internalConsoleOptions": "neverOpen",
-			"name": "mesh-farming",
+			"name": "mesh-chatting network",
 			"program": "${workspaceFolder}/server.js",
+			"request": "launch",
+			"restart": true,
+			"runtimeExecutable": "${workspaceFolder}/node_modules/nodemon/bin/nodemon.js",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"type": "node"
+		},
+		{
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"name": "mesh-chatting localhost",
+			"program": "${workspaceFolder}/server.js",
+			"env": {
+				"LOCAL_RUN": "true"
+			},
 			"request": "launch",
 			"restart": true,
 			"runtimeExecutable": "${workspaceFolder}/node_modules/nodemon/bin/nodemon.js",
