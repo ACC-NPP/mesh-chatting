@@ -28,6 +28,24 @@ async function getMyIPv(version, interface) {
 	};
 	return await processGetIp();
 }
+async function curl(url) {
+	const process_curl = () => {
+		return new Promise((resolve, reject) => {
+			function handle_curl(error, stdout, stderr) {
+				if (error) {
+					stderr && console.log(`stderr: ${stderr}`);
+					error && console.log(`error: ${error.message || error}`);
+					reject(error);
+				} else {
+					console.log(`stdout: ${stdout}`);
+					resolve(stdout);
+				}
+			}
+			exec(`curl --request GET --url '${url}'`, handle_curl);		
+		});
+	};
+	return await process_curl();
+}
 function getAddressUrl(a) {
 	const {family, address, port} = a.address();
 	if (family === 'IPv6') {
@@ -48,7 +66,6 @@ async function run() {
 	}
 	const {name, stage, network_interface} = supported_platforms[process.platform];
 	console.log(`platform detected: ${process.platform} (${name}), stage ${stage}`);
-
 	const ipv4 = LOCAL_RUN ? '127.0.0.1' : (stage === 'prod' ? '192.168.4.1' : await getMyIPv(4, network_interface));
 	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface);
 	const a = http.createServer(async (req, res) => {
@@ -58,11 +75,10 @@ async function run() {
 	const b = http.createServer(async (req, res) => {
 		let text = null;
 		try {
-			const response = await fetch(getAddressUrl(a));
-			text = await response.text();
+			text = await curl(getAddressUrl(a));
 		}
-		catch(e) {
-			text = e.message;
+		catch (error) {
+			text = error;
 		}
 		res.writeHead(200, { "Content-Type": "text/html" });
 		res.end(`hello IPv4! and bridge says: ${text}. @ ${ipv6}`);
