@@ -17,7 +17,9 @@ async function getMyIPv(version, interface) {
 					error && console.log(`error: ${error.message}`);
 					reject(stderr);
 				} else {
-					const result = stdout.split('\n')[0];
+					let result = stdout.split('\n')[0];
+					if (version === 6 && process.platform === 'linux')
+						result += `%${interface}`;
 					console.log(`stdout: ${result}`);
 					resolve(result);
 				}
@@ -31,7 +33,7 @@ function getAddressUrl(a) {
 	const {family, address, port} = a.address();
 	if (family === 'IPv6') {
 		if (process.platform === 'win32')
-			`http://[${address.split('%')[0]}]:${port}/`;
+			return `http://[${address.split('%')[0]}]:${port}/`;
 		return `http://[${address}]:${port}/`;
 	}
 	return `http://${address}:${port}/`;
