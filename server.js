@@ -8,7 +8,7 @@ const ipv6 = 'fe80::cc4:4da:69b2:5df0%en0'; // local network
 function getAddressUrl(a) {
 	let {family, address, port} = a.address();
 	if (family === 'IPv6')
-		address = `[${address}]`;
+		address = `[${address.split('%')[0]}]`;
 	return `http://${address}:${port}`;
 }
 function getAddressDescription(a) {
