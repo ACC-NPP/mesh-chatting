@@ -1,6 +1,5 @@
 const http = require('http');
 const {exec} = require('child_process');
-const fetch = require('node-fetch');
 const port = 5555;
 const supported_platforms = {
 	'linux': {name: 'Debian/Ubuntu', stage: 'prod', network_interface: 'wlan1'}, 
@@ -50,7 +49,7 @@ async function run() {
 	const {name, stage, network_interface} = supported_platforms[process.platform];
 	console.log(`platform detected: ${process.platform} (${name}), stage ${stage}`);
 
-	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await getMyIPv(4, network_interface);
+	const ipv4 = LOCAL_RUN ? '127.0.0.1' : (stage === 'prod' ? '192.168.4.1' : await getMyIPv(4, network_interface));
 	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface);
 	const a = http.createServer(async (req, res) => {
 		res.writeHead(200, { "Content-Type": "text/html" });
