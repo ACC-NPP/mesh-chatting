@@ -2,7 +2,7 @@ const http = require('http');
 const {exec} = require('child_process');
 const port = 5555;
 const supported_platforms = {
-	'linux': {name: 'Debian/Ubuntu', stage: 'prod', network_interface: 'wlan1'}, 
+	'linux': {name: 'Debian/Ubuntu', stage: 'prod', network_interface: 'wlan0'}, 
 	'win32': {name: 'Windows 32/64', stage: 'test', network_interface: ''},
 	'darwin': {name: 'MacOS', stage: 'dev', network_interface: 'en0'},
 };
