@@ -2,9 +2,9 @@ const http = require('http');
 const {exec} = require('child_process');
 const port = 5555;
 const supported_platforms = {
-	'linux': {name: 'Debian/Ubuntu', stage: 'prod', network_interface: 'wlan0'}, 
-	'win32': {name: 'Windows 32/64', stage: 'test', network_interface: ''},
-	'darwin': {name: 'MacOS', stage: 'dev', network_interface: 'en0'},
+	'linux': {name: 'Debian/Ubuntu', stage: 'prod', network_interface_terminal: 'wlan1', network_interface_mesh: 'wlan0'}, 
+	'win32': {name: 'Windows 32/64', stage: 'test', network_interface_terminal: '', network_interface_mesh: ''},
+	'darwin': {name: 'MacOS', stage: 'dev', network_interface_terminal: 'en0', network_interface_mesh: 'en0'},
 };
 const {LOCAL_RUN} = process.env;
 async function getMyIPv(version, interface) {
@@ -23,7 +23,7 @@ async function getMyIPv(version, interface) {
 					resolve(result);
 				}
 			}
-			exec(`ifconfig ${interface} | grep "inet${version === 6 ? '6' : ''} " | awk '{print $2}'`, handleGetIp);		
+			exec(`ifconfig ${interface} | grep "inet${version === 6 ? '6' : ''} " | awk '{print $2}'`, handleGetIp);
 		});
 	};
 	return await processGetIp();
@@ -41,7 +41,7 @@ async function curl(url) {
 					resolve(stdout);
 				}
 			}
-			exec(`curl --request GET --url '${url}'`, handle_curl);		
+			exec(`curl --request GET --url '${url}'`, handle_curl);
 		});
 	};
 	return await process_curl();
@@ -64,10 +64,10 @@ async function run() {
 	if (!(process.platform in supported_platforms)) {
 		process.exit(1);
 	}
-	const {name, stage, network_interface} = supported_platforms[process.platform];
+	const {name, stage, network_interface_terminal, network_interface_mesh} = supported_platforms[process.platform];
 	console.log(`platform detected: ${process.platform} (${name}), stage ${stage}`);
-	const ipv4 = LOCAL_RUN ? '127.0.0.1' : (stage === 'prod' ? '192.168.4.1' : await getMyIPv(4, network_interface));
-	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface);
+	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await getMyIPv(4, network_interface_terminal);
+	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface_mesh);
 	const a = http.createServer(async (req, res) => {
 		res.writeHead(200, { "Content-Type": "text/html" });
 		res.end(`hello IPv6! @ ${ipv6}`);
@@ -81,7 +81,7 @@ async function run() {
 			text = error;
 		}
 		res.writeHead(200, { "Content-Type": "text/html" });
-		res.end(`hello IPv4! and bridge says: ${text}. @ ${ipv6}`);
+		res.end(`hello IPv4! and bridge says: ${text}. @ ${ipv4}`);
 	}).listen(port, ipv4, () => console.log(`run at ${getAddressDescription(b)}`));
 }
 run();
