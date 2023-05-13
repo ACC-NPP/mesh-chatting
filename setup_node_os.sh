@@ -3,51 +3,9 @@ sudo apt-get install -y npm
 sudo npm install -g n
 sudo n latest
 hash -r
-sudo apt install hostapd
-sudo systemctl unmask hostapd
-sudo systemctl enable hostapd
 sudo apt install dnsmasq
 sudo apt-get install -y batctl
 sudo apt-get install -y bridge-utils
-
-sudo DEBIAN_FRONTEND=noninteractive apt install -y netfilter-persistent iptables-persistent
-sudo tee -a /etc/dhcpcd.conf << END
-interface wlan1
-    static ip_address=192.168.4.1/24
-    nohook wpa_supplicant
-END
-
-sudo tee /etc/sysctl.d/routed-ap.conf << END
-# Enable IPv4 routing
-net.ipv4.ip_forward=1
-END
-sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-sudo netfilter-persistent save
-sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
-sudo tee /etc/dnsmasq.conf << END
-interface=wlan1 # Listening interface
-dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
-                # Pool of IP addresses served via DHCP
-domain=wlan     # Local wireless DNS domain
-address=/tractorok.wlan/192.168.4.1
-                # Alias for this router
-END
-
-sudo tee /etc/hostapd/hostapd.conf << END
-country_code=RU
-interface=wlan1
-ssid=tractorok
-hw_mode=g
-channel=6
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=okok1234
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-END
 
 sudo tee /etc/network/interfaces.d/wlan0 << END
 auto wlan0
