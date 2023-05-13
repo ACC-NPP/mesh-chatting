@@ -7,6 +7,8 @@ sudo apt install dnsmasq
 sudo apt-get install -y batctl
 sudo apt-get install -y bridge-utils
 
+sudo raspi-config nonint do_wifi_country RU
+
 sudo tee /etc/network/interfaces.d/wlan0 << END
 auto wlan0
 iface wlan0 inet manual
