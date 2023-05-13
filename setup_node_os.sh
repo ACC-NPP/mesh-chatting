@@ -15,10 +15,28 @@ iface wlan0 inet manual
     wireless-mode ad-hoc
 END
 
+sudo tee /etc/network/interfaces.d/wlan1 << END
+auto wlan1
+allow-hotplug wlan1
+iface wlan1 inet manual
+    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+END
+
 sudo tee /etc/network/interfaces.d/eth << END
 auto eth0
 allow-hotplug eth0
 iface eth0 inet manual
+END
+
+sudo tee /etc/wpa_supplicant/wpa_supplicant.conf << END
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+country=RU
+
+network={
+    ssid="Keenetic-8617"
+    psk="CbYHUwvb"
+}
 END
 
 sudo tee -a /etc/dhcpcd.conf << END
