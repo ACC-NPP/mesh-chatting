@@ -62,6 +62,20 @@ function getAddressDescription(a) {
 	return `${family} ${url}`;
 }
 async function run() {
+	async function ping(url) {
+		let text = null;
+		try {
+			text = await curl(url);
+		}
+		catch (error) {
+			text = error;
+		}
+		return text;
+	}
+	async function ping_wrap(url) {
+		return `hello IPv4! and bridge says: ${await ping(url)}. @ ${ipv4}:${port}`;
+	}
+	
 	if (!(process.platform in supported_platforms)) {
 		process.exit(1);
 	}
@@ -74,15 +88,40 @@ async function run() {
 		res.end(`hello IPv6! @ ${ipv6}:${port}`);
 	}).listen(port, ipv6, () => console.log(`run at ${getAddressDescription(a)}`));
 	const b = http.createServer(async (req, res) => {
-		let text = null;
-		try {
-			text = await curl(getAddressUrl(a));
+		const urlParts = req.url.split('?');
+		const apiMethod = urlParts[0];
+		const apiParameter = urlParts[1];
+		if (apiMethod === '/') {
+			res.writeHead(200, { "Content-Type": "text/html" });
+			res.end(`
+				<div>${await ping_wrap(getAddressUrl(a))}</div>
+				<div>
+					<input id="ipv6_1" value="::1"><input id="port_1" value="5555">
+					<button onclick="onclick_button(1);">ping</button><span id="result_1"></span>
+				</div>
+				<div>
+					<input id="ipv6_2" value="::1"><input id="port_2" value="5555">
+					<button onclick="onclick_button(2);">ping</button><span id="result_2"></span>
+				</div>
+				<script>
+					async function onclick_button(id) {
+						const ipv6 = document.getElementById('ipv6_' + id).value;
+						const port = document.getElementById('port_' + id).value;
+						const response = await fetch(location.href + 'ping?http://[' + ipv6 + ']:' + port + '/');
+						const result = await response.text();
+						document.getElementById('result_' + id).textContent = result;
+					}
+				</script>
+			`);
 		}
-		catch (error) {
-			text = error;
+		else if (apiMethod === '/ping') {
+			res.writeHead(200, { "Content-Type": "text/html" });
+			res.end(await ping(apiParameter || getAddressUrl(a)));
 		}
-		res.writeHead(200, { "Content-Type": "text/html" });
-		res.end(`hello IPv4! and bridge says: ${text}. @ ${ipv4}:${port}`);
+		else {
+			res.writeHead(404, { 'Content-Type': 'text/html' });
+			res.end(`page not found`);	
+		}
 	}).listen(port, ipv4, () => console.log(`run at ${getAddressDescription(b)}`));
 }
 run();
