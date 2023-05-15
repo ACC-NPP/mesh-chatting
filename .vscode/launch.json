@@ -33,5 +33,44 @@
 			],
 			"type": "node"
 		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "mesh node 1",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"program": "${workspaceFolder}/server.js",
+			"env": {
+				"PORT": "5001",
+				"LOCAL_RUN": "true"
+			}
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "mesh node 2",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"program": "${workspaceFolder}/server.js",
+			"env": {
+				"PORT": "5002",
+				"LOCAL_RUN": "true"
+			}
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "mesh node 3",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"program": "${workspaceFolder}/server.js",
+			"env": {
+				"PORT": "5003",
+				"LOCAL_RUN": "true"
+			}
+		}
 	]
 }

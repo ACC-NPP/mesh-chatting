@@ -1,6 +1,7 @@
 const http = require('http');
 const {exec} = require('child_process');
-const port = 5555;
+const standard_port = 5555;
+const port = process.env.PORT || standard_port; //  work on custom port at dev stage
 const supported_platforms = {
 	'linux': {name: 'Debian/Ubuntu', stage: 'prod', network_interface_terminal: 'wlan1', network_interface_mesh: 'wlan0'}, 
 	'win32': {name: 'Windows 32/64', stage: 'test', network_interface_terminal: '', network_interface_mesh: ''},
@@ -70,7 +71,7 @@ async function run() {
 	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface_mesh);
 	const a = http.createServer(async (req, res) => {
 		res.writeHead(200, { "Content-Type": "text/html" });
-		res.end(`hello IPv6! @ ${ipv6}`);
+		res.end(`hello IPv6! @ ${ipv6}:${port}`);
 	}).listen(port, ipv6, () => console.log(`run at ${getAddressDescription(a)}`));
 	const b = http.createServer(async (req, res) => {
 		let text = null;
@@ -81,7 +82,7 @@ async function run() {
 			text = error;
 		}
 		res.writeHead(200, { "Content-Type": "text/html" });
-		res.end(`hello IPv4! and bridge says: ${text}. @ ${ipv4}`);
+		res.end(`hello IPv4! and bridge says: ${text}. @ ${ipv4}:${port}`);
 	}).listen(port, ipv4, () => console.log(`run at ${getAddressDescription(b)}`));
 }
 run();
