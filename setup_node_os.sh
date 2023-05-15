@@ -68,6 +68,8 @@ echo 'batman-adv' | sudo tee --append /etc/modules
 sudo tee /etc/rc.local << END
 #!/bin/sh -e
 /home/tractorok/start-batman-adv.sh &
+cd /home/tractorok/mesh-chatting
+su tractorok -c 'sleep 8 && npm start &'
 exit 0
 END
 
