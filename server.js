@@ -84,8 +84,9 @@ async function run() {
 	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await getMyIPv(4, network_interface_terminal);
 	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface_mesh);
 	const a = http.createServer(async (req, res) => {
+		console.log(`incoming ipv6 ping - [${ipv6}]:${port}`);
 		res.writeHead(200, { "Content-Type": "text/html" });
-		res.end(`hello IPv6! @ ${ipv6}:${port}`);
+		res.end(`hello IPv6! @ [${ipv6}]:${port}`);
 	}).listen(port, ipv6, () => console.log(`run at ${getAddressDescription(a)}`));
 	const b = http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
