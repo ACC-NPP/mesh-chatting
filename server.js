@@ -117,7 +117,8 @@ async function run() {
 		}
 		else if (apiMethod === '/ping') {
 			res.writeHead(200, { "Content-Type": "text/html" });
-			res.end(await ping(apiParameter || getAddressUrl(a)));
+			const result = await ping(apiParameter || getAddressUrl(a));
+			res.end(result.message ? result.message : result);
 		}
 		else {
 			res.writeHead(404, { 'Content-Type': 'text/html' });
