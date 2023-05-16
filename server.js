@@ -90,6 +90,7 @@ async function run() {
 	console.log(`platform detected: ${process.platform} (${name}), stage ${stage}`);
 	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await getMyIPv(4, network_interface_terminal);
 	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface_mesh);
+	let client = null;
 	const a = http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
 		const apiMethod = urlParts[0];
@@ -106,6 +107,7 @@ async function run() {
 			history.messages[id] = message;
 			for (let node in broadcast_target_nodes)
 				await ping(`${broadcast_target_nodes[node]}broadcast?${id}&${message}`);
+			client && client.write('data: refresh\n\n');
 			res.end('sent');
 		}
 		else {
@@ -245,7 +247,25 @@ async function run() {
 							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
 						}
 						await onclick_refresh();
+						document.getElementById('message').value = '';
 					}
+					const eventSource = new EventSource(location.href + 'subscribe');
+					eventSource.addEventListener("open", (e) => {
+						console.log(e);
+					});
+					eventSource.addEventListener("error", (e) => {
+						console.log(e);
+					});
+					eventSource.addEventListener("notice", (e) => {
+						console.log(e);
+					});
+					eventSource.addEventListener("update", (e) => {
+						console.log(e);
+					});
+					eventSource.addEventListener("message", (e) => {
+						onclick_refresh();
+						console.log(e);
+					});
 				</script>
 			`);
 		}
@@ -265,6 +285,24 @@ async function run() {
 			const message = apiParameter;
 			const result = await ping(`${getAddressUrl(a)}broadcast?${uuid.generate()}&${message}`);
 			res.end(result);
+		}
+		else if (apiMethod === '/subscribe') {
+				const headers = { // send headers to keep connection alive
+					'Content-Type': 'text/event-stream',
+					'Connection': 'keep-alive',
+					'Cache-Control': 'no-cache'
+				};
+				res.writeHead(200, headers);
+				res.write('subscribed'); // send client a simple response
+				client = res; // store `res` of client to let us send events at will
+				req.on('close', () => { client = null; }); // listen for client 'close' requests
+				client && client.write('data: refresh\n\n');
+				client && client.write('data: refresh\n\n');
+		}
+		else if (apiMethod === '/callback') {
+			client && client.write('data: callback\n\n');
+			res.writeHead(200, { "Content-Type": "text/html" });
+			res.end('done');
 		}
 		else {
 			res.writeHead(404, { 'Content-Type': 'text/html' });
