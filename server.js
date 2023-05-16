@@ -1,4 +1,5 @@
 const http = require('http');
+const uuid = require('ordered-uuid-v4-fixed');
 const {exec} = require('child_process');
 const standard_port = 5555;
 const port = process.env.PORT || standard_port; //  work on custom port at dev stage
@@ -8,6 +9,7 @@ const supported_platforms = {
 	'darwin': {name: 'MacOS', stage: 'dev', network_interface_terminal: 'en0', network_interface_mesh: 'en0'},
 };
 const {LOCAL_RUN} = process.env;
+const history = {messages: {}, events: {}};
 async function getMyIPv(version, interface) {
 	let processGetIp = () => {
 		return new Promise((resolve, reject) => {
@@ -118,7 +120,13 @@ async function run() {
 		else if (apiMethod === '/ping') {
 			res.writeHead(200, { "Content-Type": "text/html" });
 			const result = await ping(apiParameter || getAddressUrl(a));
-			res.end(result.message ? result.message : result);
+			const text = result.message ? result.message : result;
+			history.events[uuid.generate()] = text;
+			res.end(text);
+		}
+		else if (apiMethod === '/history') {
+			res.writeHead(200, { "Content-Type": "application/json" });
+			res.end(JSON.stringify(history));
 		}
 		else {
 			res.writeHead(404, { 'Content-Type': 'text/html' });
