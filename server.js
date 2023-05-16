@@ -106,6 +106,7 @@ async function run() {
 					<input id="ipv6_2" value="::1"><input id="port_2" value="5555">
 					<button onclick="onclick_button(2);">ping</button>
 				</div>
+				<p><input id="message"><button onclick="onclick_send();">send</button></p>
 				<p>chat history <button onclick="onclick_refresh();">refresh</button></p>
 				<div id="chat_history"></div>
 				<script>
@@ -194,7 +195,8 @@ async function run() {
 						}
 						const listElement = document.getElementById('chat_history');
 						listElement.innerHTML = '';
-						const records = Object.assign(events, messages, errors, history.locals);
+						const records = {};
+						Object.assign(records, events, messages, errors, history.locals);
 						const list = Object.keys(records).sort();
 						list.forEach(uuid => {
 							const recordElement = document.createElement('div');
@@ -202,10 +204,23 @@ async function run() {
 							recordElement.textContent = records[uuid];
 							recordElement.style.color = (uuid in errors) ? 'red'
 								: (uuid in events) ? 'orange'
-									: 'black';
+									: (uuid in messages) ? 'black'
+										: 'gray';
 							listElement.append(recordElement);
 						});
 						history.locals = records;
+					}
+					async function onclick_send() {
+						const message = document.getElementById('message').value;
+						if (!message)
+							return;
+						try {
+							const response = await fetch(location.href + 'send?' + message);
+						}
+						catch (e) {
+							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
+						}
+						await onclick_refresh();
 					}
 				</script>
 			`);
@@ -220,6 +235,11 @@ async function run() {
 		else if (apiMethod === '/history') {
 			res.writeHead(200, { "Content-Type": "application/json" });
 			res.end(JSON.stringify(history));
+		}
+		else if (apiMethod === '/send') {
+			history.messages[uuid.generate()] = apiParameter;
+			res.writeHead(200, { "Content-Type": "text/html" });
+			res.end('OK');
 		}
 		else {
 			res.writeHead(404, { 'Content-Type': 'text/html' });
