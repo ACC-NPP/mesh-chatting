@@ -10,6 +10,11 @@ const supported_platforms = {
 };
 const {LOCAL_RUN} = process.env;
 const history = {messages: {}, events: {}};
+const broadcast_target_nodes = { // mesh node: name -> ipv6 url
+	'node1': 'http://[::1]:5001/',
+	'node2': 'http://[::1]:5002/',
+	'node3': 'http://[::1]:5003/',
+}; // TODO: raplace hardcode by assignment and autodetection
 async function getMyIPv(version, interface) {
 	let processGetIp = () => {
 		return new Promise((resolve, reject) => {
@@ -86,9 +91,28 @@ async function run() {
 	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await getMyIPv(4, network_interface_terminal);
 	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface_mesh);
 	const a = http.createServer(async (req, res) => {
-		console.log(`incoming ipv6 ping - [${ipv6}]:${port}`);
-		res.writeHead(200, { "Content-Type": "text/html" });
-		res.end(`hello IPv6! @ [${ipv6}]:${port}`);
+		const urlParts = req.url.split('?');
+		const apiMethod = urlParts[0];
+		const apiParameter = urlParts[1];
+		if (apiMethod === '/broadcast') {
+			res.writeHead(200, { "Content-Type": "text/html" });
+			const parts = apiParameter.split('&');
+			const id = parts[0];
+			if (id in history.messages) {
+				res.end('stopped');
+				return;
+			}
+			const message = parts[1];
+			history.messages[id] = message;
+			for (let node in broadcast_target_nodes)
+				await ping(`${broadcast_target_nodes[node]}broadcast?${id}&${message}`);
+			res.end('sent');
+		}
+		else {
+			console.log(`incoming ipv6 ping - [${ipv6}]:${port}`);
+			res.writeHead(200, { "Content-Type": "text/html" });
+			res.end(`hello IPv6! @ [${ipv6}]:${port}`);	
+		}
 	}).listen(port, ipv6, () => console.log(`run at ${getAddressDescription(a)}`));
 	const b = http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
@@ -237,9 +261,10 @@ async function run() {
 			res.end(JSON.stringify(history));
 		}
 		else if (apiMethod === '/send') {
-			history.messages[uuid.generate()] = apiParameter;
 			res.writeHead(200, { "Content-Type": "text/html" });
-			res.end('OK');
+			const message = apiParameter;
+			const result = await ping(`${getAddressUrl(a)}broadcast?${uuid.generate()}&${message}`);
+			res.end(result);
 		}
 		else {
 			res.writeHead(404, { 'Content-Type': 'text/html' });
