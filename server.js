@@ -100,19 +100,112 @@ async function run() {
 				<div>${await ping_wrap(getAddressUrl(a))}</div>
 				<div>
 					<input id="ipv6_1" value="::1"><input id="port_1" value="5555">
-					<button onclick="onclick_button(1);">ping</button><span id="result_1"></span>
+					<button onclick="onclick_button(1);">ping</button>
 				</div>
 				<div>
 					<input id="ipv6_2" value="::1"><input id="port_2" value="5555">
-					<button onclick="onclick_button(2);">ping</button><span id="result_2"></span>
+					<button onclick="onclick_button(2);">ping</button>
 				</div>
+				<p>chat history <button onclick="onclick_refresh();">refresh</button></p>
+				<div id="chat_history"></div>
 				<script>
+					class CombUUID {
+						static encode(now = new Date()) {
+							if (!(now instanceof Date)) {
+								now = new Date(now);
+							}
+							// timestamp
+							const timestamp_js = now.getTime();
+							const timestamp_bin = timestamp_js * 100;
+							const timestamp_hex = timestamp_bin.toString(16);
+							const ts1 = timestamp_hex.substring(0, 8);
+							const ts2 = timestamp_hex.substring(8, 13);
+							// version
+							const version = '4';
+							const variant = 'b';
+					
+							// random
+							
+							// node.js version//
+							//const bytes = crypto.randomBytes(18).toString("hex");
+							////
+							
+							// browser version //
+							const raw_bytes = new Uint8Array(18);
+							crypto.getRandomValues(raw_bytes);
+							let bytes = '';
+							raw_bytes.forEach(b => bytes += b.toString(16).padStart(2, '0'));
+							////
+
+							const r1 = bytes.substring(0,3);
+							const r2 = bytes.substring(3,6);
+							const r3 = bytes.substring(6,18);
+							return \`\${ts1}-\${ts2}-\${version}\${r1}-\${variant}\${r2}-\${r3}\`;
+						}
+						static decode(uuid) {
+							const uuid_hex = \`\${uuid}\`.toLowerCase().replace(/[^0-9a-f]/g, ''); // string all non-hex characters
+							if (uuid_hex.length !== 32) {
+								throw new Error('Invalid UUID not length 32 when non-hex characters removed');
+							}
+							// timestamp
+							const timestamp_hex = uuid_hex.substring(0, 12);
+							const timestamp = parseInt(timestamp_hex, 16);
+							const timestamp_ms = timestamp / 100;
+							const timestamp_js = new Date(timestamp_ms);
+							// version
+							const version = uuid_hex.substring(12, 13);
+							const variant = uuid_hex.substring(16, 17);
+							// random
+							const random = \`\${uuid_hex.substring(13,16)}\${uuid_hex.substring(17)}\`;
+
+							return {
+								version,
+								variant,
+								timestamp,
+								timestamp_js,
+								random,
+							};
+						}
+					}
+				</script>
+				<script>
+					const history = {locals: {}, errors: {}};
 					async function onclick_button(id) {
 						const ipv6 = document.getElementById('ipv6_' + id).value;
 						const port = document.getElementById('port_' + id).value;
-						const response = await fetch(location.href + 'ping?http://[' + ipv6 + ']:' + port + '/');
-						const result = await response.text();
-						document.getElementById('result_' + id).textContent = result;
+						try {
+							const response = await fetch(location.href + 'ping?http://[' + ipv6 + ']:' + port + '/');
+						}
+						catch(e) {
+							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
+						}
+						await onclick_refresh();
+					}
+					async function onclick_refresh() {
+						let events = {}, messages = {}, errors = history.errors;
+						try {
+							const response = await fetch(location.href + 'history');
+							const h = await response.json();
+							events = h.events;
+							messages = h.messages
+						}
+						catch (e) {
+							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
+						}
+						const listElement = document.getElementById('chat_history');
+						listElement.innerHTML = '';
+						const records = Object.assign(events, messages, errors, history.locals);
+						const list = Object.keys(records).sort();
+						list.forEach(uuid => {
+							const recordElement = document.createElement('div');
+							recordElement.id = uuid;
+							recordElement.textContent = records[uuid];
+							recordElement.style.color = (uuid in errors) ? 'red'
+								: (uuid in events) ? 'orange'
+									: 'black';
+							listElement.append(recordElement);
+						});
+						history.locals = records;
 					}
 				</script>
 			`);
