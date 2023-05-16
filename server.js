@@ -132,7 +132,7 @@ async function run() {
 					<input id="ipv6_2" value="::1"><input id="port_2" value="5555">
 					<button onclick="onclick_button(2);">ping</button>
 				</div>
-				<p><input id="message"><button onclick="onclick_send();">send</button></p>
+				<p><input id="message" onkeydown="if (event.key === 'Enter') onclick_send();"><button onclick="onclick_send();">send</button></p>
 				<p>chat history <button onclick="onclick_refresh();">refresh</button></p>
 				<div id="chat_history"></div>
 				<script>
