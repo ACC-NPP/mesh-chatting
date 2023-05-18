@@ -69,7 +69,7 @@ function getAddressDescription(a) {
 	return `${family} ${url}`;
 }
 async function run() {
-	async function ping(url) {
+	async function wrap_curl(url) {
 		let text = null;
 		try {
 			text = await curl(url);
@@ -82,7 +82,7 @@ async function run() {
 	async function self_test() {
 		const terminal_url = getAddressUrl(terminal_server);
 		const mesh_url = getAddressUrl(mesh_server);
-		return `self test. ${terminal_url}ping >> ${await ping(terminal_url + 'ping')}; ${mesh_url}ping >> ${await ping(mesh_url + 'ping')}.`;
+		return `self test. ${terminal_url}ping >> ${await wrap_curl(terminal_url + 'ping')}; ${mesh_url}ping >> ${await wrap_curl(mesh_url + 'ping')}.`;
 	}
 	
 	if (!(process.platform in supported_platforms)) {
@@ -108,7 +108,7 @@ async function run() {
 			const message = parts[1];
 			history.messages[id] = message;
 			for (let node in broadcast_target_nodes)
-				await ping(`${broadcast_target_nodes[node]}broadcast?${id}&${message}`);
+				await wrap_curl(`${broadcast_target_nodes[node]}broadcast?${id}&${message}`);
 			client && client.write('data: refresh\n\n');
 			res.end('sent');
 		}
@@ -280,7 +280,7 @@ async function run() {
 		}
 		else if (apiMethod === '/ping') {
 			res.writeHead(200, { "Content-Type": "text/html" });
-			const result = apiParameter ? await ping(`${apiParameter}ping`) : 'hello terminal IPv4!';
+			const result = apiParameter ? await wrap_curl(`${apiParameter}ping`) : 'hello terminal IPv4!';
 			const text = result.message ? result.message : result;
 			history.events[uuid.generate()] = text;
 			res.end(text);
@@ -292,7 +292,7 @@ async function run() {
 		else if (apiMethod === '/send') {
 			res.writeHead(200, { "Content-Type": "text/html" });
 			const message = apiParameter;
-			const result = await ping(`${getAddressUrl(mesh_server)}broadcast?${uuid.generate()}&${message}`);
+			const result = await wrap_curl(`${getAddressUrl(mesh_server)}broadcast?${uuid.generate()}&${message}`);
 			res.end(result);
 		}
 		else if (apiMethod === '/subscribe') {
