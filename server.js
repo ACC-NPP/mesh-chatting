@@ -79,8 +79,10 @@ async function run() {
 		}
 		return text;
 	}
-	async function ping_wrap(url) {
-		return `hello IPv4! and bridge says: ${await ping(url)}. @ ${ipv4}:${port}`;
+	async function self_test() {
+		const terminal_url = getAddressUrl(terminal_server);
+		const mesh_url = getAddressUrl(mesh_server);
+		return `self test. ${terminal_url}ping >> ${await ping(terminal_url + 'ping')}; ${mesh_url}ping >> ${await ping(mesh_url + 'ping')}.`;
 	}
 	
 	if (!(process.platform in supported_platforms)) {
@@ -110,10 +112,14 @@ async function run() {
 			client && client.write('data: refresh\n\n');
 			res.end('sent');
 		}
-		else {
+		else if (apiMethod === '/ping') {
 			console.log(`incoming ipv6 ping - [${ipv6}]:${port}`);
 			res.writeHead(200, { "Content-Type": "text/html" });
-			res.end(`hello IPv6! @ [${ipv6}]:${port}`);	
+			res.end('hello mesh IPv6!');	
+		}
+		else {
+			res.writeHead(404, { 'Content-Type': 'text/html' });
+			res.end(`unknown command`);	
 		}
 	}).listen(port, ipv6, () => console.log(`run at ${getAddressDescription(mesh_server)}`));
 	const terminal_server = http.createServer(async (req, res) => {
@@ -123,7 +129,7 @@ async function run() {
 		if (apiMethod === '/') {
 			res.writeHead(200, { "Content-Type": "text/html" });
 			res.end(`
-				<div>${await ping_wrap(getAddressUrl(mesh_server))}</div>
+				<div>${await self_test()}</div>
 				<div>
 					<input id="ipv6_1" value="::1"><input id="port_1" value="5555">
 					<button onclick="onclick_button(1);">ping</button>
@@ -274,7 +280,7 @@ async function run() {
 		}
 		else if (apiMethod === '/ping') {
 			res.writeHead(200, { "Content-Type": "text/html" });
-			const result = await ping(apiParameter || getAddressUrl(mesh_server));
+			const result = apiParameter ? await ping(`${apiParameter}ping`) : 'hello terminal IPv4!';
 			const text = result.message ? result.message : result;
 			history.events[uuid.generate()] = text;
 			res.end(text);
@@ -309,7 +315,7 @@ async function run() {
 		}
 		else {
 			res.writeHead(404, { 'Content-Type': 'text/html' });
-			res.end(`page not found`);	
+			res.end(`page not found`);
 		}
 	}).listen(port, ipv4, () => console.log(`run at ${getAddressDescription(terminal_server)}`));
 }
