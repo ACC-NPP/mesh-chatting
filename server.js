@@ -83,6 +83,13 @@ function getAddressDescription(a) {
 	const {family} = a.address();
 	return `${family} ${url}`;
 }
+function get_broadcast_target_nodes_table() {
+	let result = '<div>mesh nodes</div>';
+	for (let node in broadcast_target_nodes) {
+		result += `<div>${node}: ${broadcast_target_nodes[node]}</div>`;
+	}
+	return result;
+}
 async function run() {
 	async function wrap_curl(url) {
 		let text = null;
@@ -155,6 +162,7 @@ async function run() {
 				<h2>${await get_my_hostname()}</h2>
 				<h3>terminal ipv4 = ${ipv4} mesh ipv6 = ${ipv6} port = ${port}</h3>
 				<p>${await self_test()}</p>
+				<p>${get_broadcast_target_nodes_table()}</p>
 				<div>
 					<input id="ipvx" value="::1"><input id="port" value="5555">
 					<button onclick="onclick_ping();">ping</button>
