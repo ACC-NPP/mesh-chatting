@@ -232,6 +232,12 @@ async function run() {
 				</script>
 				<script>
 					const history = {locals: {}, errors: {}};
+					function uuidToTime(uuid) {
+						const t = CombUUID.decode(uuid).timestamp_js;
+						return t.getFullYear() + '.' + (t.getMonth()+1).toString().padStart(2, '0') + '.' + t.getDate().toString().padStart(2, '0') + ' ' +
+							t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0') + ':' +
+							t.getSeconds().toString().padStart(2, '0');
+					}
 					async function onclick_ping() {
 						const ipvx = document.getElementById('ipvx').value;
 						const port = document.getElementById('port').value;
@@ -263,7 +269,7 @@ async function run() {
 						list.forEach(uuid => {
 							const recordElement = document.createElement('div');
 							recordElement.id = uuid;
-							recordElement.textContent = records[uuid];
+							recordElement.textContent = uuidToTime(uuid) + ' >> ' + records[uuid];
 							recordElement.style.color = (uuid in errors) ? 'red'
 								: (uuid in events) ? 'orange'
 									: (uuid in messages) ? 'black'
