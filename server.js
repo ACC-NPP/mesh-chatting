@@ -14,11 +14,13 @@ const broadcast_target_nodes = { // mesh node: name -> ipv6 url
 	'node1': 'http://[::1]:5001/',
 	'node2': 'http://[::1]:5002/',
 	'node3': 'http://[::1]:5003/',
-}; // TODO: raplace hardcode by assignment and autodetection
-async function getMyIPv(version, interface) {
-	let processGetIp = () => {
+	'node4': 'http://[::1]:5004/',
+	'node5': 'http://[::1]:5005/',
+}; // TODO: use it for DEV + LOCALRUN only, for DEV use real local ips, for PROD use alfred
+async function get_my_ipv(version, interface) {
+	let process_get_ip = () => {
 		return new Promise((resolve, reject) => {
-			function handleGetIp(error, stdout, stderr) {
+			function handle_get_ip(error, stdout, stderr) {
 				if (error || stderr) {
 					stderr && console.log(`stderr: ${stderr}`);
 					error && console.log(`error: ${error.message}`);
@@ -31,10 +33,10 @@ async function getMyIPv(version, interface) {
 					resolve(result);
 				}
 			}
-			exec(`ifconfig ${interface} | grep "inet${version === 6 ? '6' : ''} " | awk '{print $2}'`, handleGetIp);
+			exec(`ifconfig ${interface} | grep "inet${version === 6 ? '6' : ''} " | awk '{print $2}'`, handle_get_ip);
 		});
 	};
-	return await processGetIp();
+	return await process_get_ip();
 }
 async function curl(url) {
 	const process_curl = () => {
@@ -90,8 +92,8 @@ async function run() {
 	}
 	const {name, stage, network_interface_terminal, network_interface_mesh} = supported_platforms[process.platform];
 	console.log(`platform detected: ${process.platform} (${name}), stage ${stage}`);
-	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await getMyIPv(4, network_interface_terminal);
-	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface_mesh);
+	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await get_my_ipv(4, network_interface_terminal);
+	const ipv6 = LOCAL_RUN ? '::1' : await get_my_ipv(6, network_interface_mesh);
 	let client = null;
 	const mesh_server = http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
