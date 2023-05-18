@@ -232,7 +232,10 @@ async function run() {
 								: (uuid in events) ? 'orange'
 									: (uuid in messages) ? 'black'
 										: 'gray';
-							listElement.append(recordElement);
+							if (!listElement.firstElementChild)
+								listElement.append(recordElement);
+							else
+								listElement.insertBefore(recordElement, listElement.firstElementChild);
 						});
 						history.locals = records;
 					}
