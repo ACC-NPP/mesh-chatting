@@ -5,38 +5,9 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen",
-			"name": "mesh-chatting network",
-			"program": "${workspaceFolder}/server.js",
-			"request": "launch",
-			"restart": true,
-			"runtimeExecutable": "${workspaceFolder}/node_modules/nodemon/bin/nodemon.js",
-			"skipFiles": [
-				"<node_internals>/**"
-			],
-			"type": "node"
-		},
-		{
-			"console": "integratedTerminal",
-			"internalConsoleOptions": "neverOpen",
-			"name": "mesh-chatting localhost",
-			"program": "${workspaceFolder}/server.js",
-			"env": {
-				"LOCAL_RUN": "true"
-			},
-			"request": "launch",
-			"restart": true,
-			"runtimeExecutable": "${workspaceFolder}/node_modules/nodemon/bin/nodemon.js",
-			"skipFiles": [
-				"<node_internals>/**"
-			],
-			"type": "node"
-		},
-		{
 			"type": "node",
 			"request": "launch",
-			"name": "mesh node 1",
+			"name": "mesh node 1 localrun",
 			"skipFiles": [
 				"<node_internals>/**"
 			],
@@ -49,7 +20,7 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "mesh node 2",
+			"name": "mesh node 2 localrun",
 			"skipFiles": [
 				"<node_internals>/**"
 			],
@@ -62,7 +33,7 @@
 		{
 			"type": "node",
 			"request": "launch",
-			"name": "mesh node 3",
+			"name": "mesh node 3 localrun",
 			"skipFiles": [
 				"<node_internals>/**"
 			],
@@ -70,6 +41,42 @@
 			"env": {
 				"PORT": "5003",
 				"LOCAL_RUN": "true"
+			}
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "mesh node 1 network",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"program": "${workspaceFolder}/server.js",
+			"env": {
+				"PORT": "5001"
+			}
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "mesh node 2 network",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"program": "${workspaceFolder}/server.js",
+			"env": {
+				"PORT": "5002"
+			}
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "mesh node 3 network",
+			"skipFiles": [
+				"<node_internals>/**"
+			],
+			"program": "${workspaceFolder}/server.js",
+			"env": {
+				"PORT": "5003"
 			}
 		}
 	]

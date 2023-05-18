@@ -10,13 +10,7 @@ const supported_platforms = {
 };
 const {LOCAL_RUN} = process.env;
 const history = {messages: {}, events: {}};
-const broadcast_target_nodes = { // mesh node: name -> ipv6 url
-	'node1': 'http://[::1]:5001/',
-	'node2': 'http://[::1]:5002/',
-	'node3': 'http://[::1]:5003/',
-	'node4': 'http://[::1]:5004/',
-	'node5': 'http://[::1]:5005/',
-}; // TODO: use it for DEV + LOCALRUN only, for DEV use real local ips, for PROD use alfred
+let broadcast_target_nodes; // mesh node: name -> ipv6 url
 async function get_my_ipv(version, interface) {
 	let process_get_ip = () => {
 		return new Promise((resolve, reject) => {
@@ -114,6 +108,13 @@ async function run() {
 	console.log(`platform detected: ${process.platform} (${name}), stage ${stage}`);
 	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await get_my_ipv(4, network_interface_terminal);
 	const ipv6 = LOCAL_RUN ? '::1' : await get_my_ipv(6, network_interface_mesh);
+	broadcast_target_nodes = {
+		'node1': `http://[${ipv6}]:5001/`,
+		'node2': `http://[${ipv6}]:5002/`,
+		'node3': `http://[${ipv6}]:5003/`,
+		'node4': `http://[${ipv6}]:5004/`,
+		'node5': `http://[${ipv6}]:5005/`,
+	};
 	let client = null;
 	const mesh_server = http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
