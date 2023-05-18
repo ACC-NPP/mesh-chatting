@@ -136,9 +136,10 @@ async function run() {
 				return;
 			}
 			const message = parts[1];
-			history.messages[id] = message;
+			const origin_hostname = parts[2];
+			history.messages[id] = {origin_hostname, message};
 			for (let node in broadcast_target_nodes)
-				await wrap_curl(`${broadcast_target_nodes[node]}broadcast?${id}&${message}`);
+				await wrap_curl(`${broadcast_target_nodes[node]}broadcast?${id}&${message}&${origin_hostname}`);
 			client && client.write('data: refresh\n\n');
 			res.end('sent');
 		}
@@ -269,7 +270,8 @@ async function run() {
 						list.forEach(uuid => {
 							const recordElement = document.createElement('div');
 							recordElement.id = uuid;
-							recordElement.textContent = uuidToTime(uuid) + ' >> ' + records[uuid];
+							recordElement.textContent = uuidToTime(uuid) + ' >> ' + 
+								(records[uuid].origin_hostname ? (records[uuid].origin_hostname + ' >> ' + records[uuid].message) : records[uuid]);
 							recordElement.style.color = (uuid in errors) ? 'red'
 								: (uuid in events) ? 'orange'
 									: (uuid in messages) ? 'black'
@@ -329,7 +331,7 @@ async function run() {
 		else if (apiMethod === '/send') {
 			res.writeHead(200, { "Content-Type": "text/html" });
 			const message = apiParameter;
-			const result = await wrap_curl(`${getAddressUrl(mesh_server)}broadcast?${uuid.generate()}&${message}`);
+			const result = await wrap_curl(`${getAddressUrl(mesh_server)}broadcast?${uuid.generate()}&${message}&${await get_my_hostname()}`);
 			res.end(result);
 		}
 		else if (apiMethod === '/subscribe') {
