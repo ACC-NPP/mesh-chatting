@@ -38,6 +38,24 @@ async function get_my_ipv(version, interface) {
 	};
 	return await process_get_ip();
 }
+async function get_my_hostname() {
+	let process_get_hostname = () => {
+		return new Promise((resolve, reject) => {
+			function handle_get_hostname(error, stdout, stderr) {
+				if (error || stderr) {
+					stderr && console.log(`stderr: ${stderr}`);
+					error && console.log(`error: ${error.message}`);
+					reject(stderr);
+				} else {
+					console.log(`stdout: ${stdout}`);
+					resolve(stdout);
+				}
+			}
+			exec('hostname', handle_get_hostname);
+		});
+	};
+	return await process_get_hostname();
+}
 async function curl(url) {
 	const process_curl = () => {
 		return new Promise((resolve, reject) => {
@@ -84,7 +102,8 @@ async function run() {
 	async function self_test() {
 		const terminal_url = getAddressUrl(terminal_server);
 		const mesh_url = getAddressUrl(mesh_server);
-		return `self test. ${terminal_url}ping >> ${await wrap_curl(terminal_url + 'ping')}; ${mesh_url}ping >> ${await wrap_curl(mesh_url + 'ping')}.`;
+		return `<div>self test</div><div>${terminal_url}ping >> ${await wrap_curl(terminal_url + 'ping')}</div>
+			<div>${mesh_url}ping >> ${await wrap_curl(mesh_url + 'ping')}</div>`;
 	}
 	
 	if (!(process.platform in supported_platforms)) {
@@ -131,14 +150,12 @@ async function run() {
 		if (apiMethod === '/') {
 			res.writeHead(200, { "Content-Type": "text/html" });
 			res.end(`
-				<div>${await self_test()}</div>
+				<h2>${await get_my_hostname()}</h2>
+				<h3>terminal ipv4 = ${ipv4} mesh ipv6 = ${ipv6} port = ${port}</h3>
+				<p>${await self_test()}</p>
 				<div>
-					<input id="ipv6_1" value="::1"><input id="port_1" value="5555">
-					<button onclick="onclick_button(1);">ping</button>
-				</div>
-				<div>
-					<input id="ipv6_2" value="::1"><input id="port_2" value="5555">
-					<button onclick="onclick_button(2);">ping</button>
+					<input id="ipvx" value="::1"><input id="port" value="5555">
+					<button onclick="onclick_ping();">ping</button>
 				</div>
 				<p><input id="message" onkeydown="if (event.key === 'Enter') onclick_send();"><button onclick="onclick_send();">send</button></p>
 				<p>chat history <button onclick="onclick_refresh();">refresh</button></p>
@@ -205,11 +222,12 @@ async function run() {
 				</script>
 				<script>
 					const history = {locals: {}, errors: {}};
-					async function onclick_button(id) {
-						const ipv6 = document.getElementById('ipv6_' + id).value;
-						const port = document.getElementById('port_' + id).value;
+					async function onclick_ping() {
+						const ipvx = document.getElementById('ipvx').value;
+						const port = document.getElementById('port').value;
 						try {
-							const response = await fetch(location.href + 'ping?http://[' + ipv6 + ']:' + port + '/');
+							const ip = ipvx.indexOf(':') >= 0 ? '[' + ipvx + ']' : ipvx;
+							const response = await fetch(location.href + 'ping?http://' + ip + ':' + port + '/');
 						}
 						catch(e) {
 							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
