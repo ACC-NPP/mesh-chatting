@@ -91,7 +91,7 @@ async function run() {
 	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await getMyIPv(4, network_interface_terminal);
 	const ipv6 = LOCAL_RUN ? '::1' : await getMyIPv(6, network_interface_mesh);
 	let client = null;
-	const a = http.createServer(async (req, res) => {
+	const mesh_server = http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
 		const apiMethod = urlParts[0];
 		const apiParameter = urlParts[1];
@@ -115,15 +115,15 @@ async function run() {
 			res.writeHead(200, { "Content-Type": "text/html" });
 			res.end(`hello IPv6! @ [${ipv6}]:${port}`);	
 		}
-	}).listen(port, ipv6, () => console.log(`run at ${getAddressDescription(a)}`));
-	const b = http.createServer(async (req, res) => {
+	}).listen(port, ipv6, () => console.log(`run at ${getAddressDescription(mesh_server)}`));
+	const terminal_server = http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
 		const apiMethod = urlParts[0];
 		const apiParameter = urlParts[1];
 		if (apiMethod === '/') {
 			res.writeHead(200, { "Content-Type": "text/html" });
 			res.end(`
-				<div>${await ping_wrap(getAddressUrl(a))}</div>
+				<div>${await ping_wrap(getAddressUrl(mesh_server))}</div>
 				<div>
 					<input id="ipv6_1" value="::1"><input id="port_1" value="5555">
 					<button onclick="onclick_button(1);">ping</button>
@@ -274,7 +274,7 @@ async function run() {
 		}
 		else if (apiMethod === '/ping') {
 			res.writeHead(200, { "Content-Type": "text/html" });
-			const result = await ping(apiParameter || getAddressUrl(a));
+			const result = await ping(apiParameter || getAddressUrl(mesh_server));
 			const text = result.message ? result.message : result;
 			history.events[uuid.generate()] = text;
 			res.end(text);
@@ -286,7 +286,7 @@ async function run() {
 		else if (apiMethod === '/send') {
 			res.writeHead(200, { "Content-Type": "text/html" });
 			const message = apiParameter;
-			const result = await ping(`${getAddressUrl(a)}broadcast?${uuid.generate()}&${message}`);
+			const result = await ping(`${getAddressUrl(mesh_server)}broadcast?${uuid.generate()}&${message}`);
 			res.end(result);
 		}
 		else if (apiMethod === '/subscribe') {
@@ -311,6 +311,6 @@ async function run() {
 			res.writeHead(404, { 'Content-Type': 'text/html' });
 			res.end(`page not found`);	
 		}
-	}).listen(port, ipv4, () => console.log(`run at ${getAddressDescription(b)}`));
+	}).listen(port, ipv4, () => console.log(`run at ${getAddressDescription(terminal_server)}`));
 }
 run();
