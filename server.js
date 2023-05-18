@@ -137,7 +137,7 @@ async function run() {
 			}
 			const message = parts[1];
 			const origin_hostname = parts[2];
-			history.messages[id] = {origin_hostname, message};
+			history.messages[id] = {origin_hostname: decodeURIComponent(origin_hostname), message: decodeURIComponent(message)};
 			for (let node in broadcast_target_nodes)
 				await wrap_curl(`${broadcast_target_nodes[node]}broadcast?${id}&${message}&${origin_hostname}`);
 			client && client.write('data: refresh\n\n');
@@ -158,7 +158,7 @@ async function run() {
 		const apiMethod = urlParts[0];
 		const apiParameter = urlParts[1];
 		if (apiMethod === '/') {
-			res.writeHead(200, { "Content-Type": "text/html" });
+			res.writeHead(200, { "Content-Type": "text/html; charset=UTF-8" });
 			res.end(`
 				<h2>${await get_my_hostname()}</h2>
 				<h3>terminal ipv4 = ${ipv4} mesh ipv6 = ${ipv6} port = ${port}</h3>
@@ -270,8 +270,16 @@ async function run() {
 						list.forEach(uuid => {
 							const recordElement = document.createElement('div');
 							recordElement.id = uuid;
-							recordElement.textContent = uuidToTime(uuid) + ' >> ' + 
-								(records[uuid].origin_hostname ? (records[uuid].origin_hostname + ' >> ' + records[uuid].message) : records[uuid]);
+							const timeElement = document.createElement('span');
+							timeElement.textContent = uuidToTime(uuid);
+							const hostnameElement = document.createElement('span');
+							hostnameElement.textContent = ' ' + (records[uuid].origin_hostname || '') + ' ';
+							hostnameElement.style.fontWeight = 'bold';
+							const messageElement = document.createElement('span');
+							messageElement.textContent = (records[uuid].message || records[uuid]);
+							recordElement.append(timeElement);
+							recordElement.append(hostnameElement);
+							recordElement.append(messageElement);
 							recordElement.style.color = (uuid in errors) ? 'red'
 								: (uuid in events) ? 'orange'
 									: (uuid in messages) ? 'black'
@@ -288,7 +296,7 @@ async function run() {
 						if (!message)
 							return;
 						try {
-							const response = await fetch(location.href + 'send?' + message);
+							const response = await fetch(location.href + 'send?' + encodeURIComponent(message));
 						}
 						catch (e) {
 							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
@@ -329,9 +337,9 @@ async function run() {
 			res.end(JSON.stringify(history));
 		}
 		else if (apiMethod === '/send') {
-			res.writeHead(200, { "Content-Type": "text/html" });
+			res.writeHead(200, { "Content-Type": "text/html; charset=UTF-8" });
 			const message = apiParameter;
-			const result = await wrap_curl(`${getAddressUrl(mesh_server)}broadcast?${uuid.generate()}&${message}&${await get_my_hostname()}`);
+			const result = await wrap_curl(`${getAddressUrl(mesh_server)}broadcast?${uuid.generate()}&${message}&${encodeURIComponent(await get_my_hostname())}`);
 			res.end(result);
 		}
 		else if (apiMethod === '/subscribe') {
