@@ -47,8 +47,9 @@ async function get_my_hostname() {
 					error && console.log(`error: ${error.message}`);
 					reject(stderr);
 				} else {
-					console.log(`stdout: ${stdout}`);
-					resolve(stdout);
+					let result = stdout.split('\n')[0];
+					console.log(`stdout: ${result}`);
+					resolve(result);
 				}
 			}
 			exec('hostname', handle_get_hostname);
@@ -136,7 +137,7 @@ async function run() {
 		else if (apiMethod === '/ping') {
 			console.log(`incoming ipv6 ping - [${ipv6}]:${port}`);
 			res.writeHead(200, { "Content-Type": "text/html" });
-			res.end('hello mesh IPv6!');	
+			res.end(`hello mesh IPv6! ${await get_my_hostname()}@${port}`);
 		}
 		else {
 			res.writeHead(404, { 'Content-Type': 'text/html' });
@@ -300,7 +301,8 @@ async function run() {
 		}
 		else if (apiMethod === '/ping') {
 			res.writeHead(200, { "Content-Type": "text/html" });
-			const result = apiParameter ? await wrap_curl(`${apiParameter}ping`) : 'hello terminal IPv4!';
+			const result = apiParameter ? await wrap_curl(`${apiParameter}ping`)
+				: `hello terminal IPv4! ${await get_my_hostname()}@${port}`;
 			const text = result.message ? result.message : result;
 			history.events[uuid.generate()] = text;
 			res.end(text);
