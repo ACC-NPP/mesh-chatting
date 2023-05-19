@@ -4,9 +4,9 @@ const {exec} = require('child_process');
 const standard_port = 5555;
 const port = parseInt(process.env.PORT || standard_port); //  work on custom port at dev stage
 const DEV_STAGE = port !== standard_port;
-const {LOCAL_RUN} = process.env;
+const {LOCAL_RUN, LITE_VERSION} = process.env;
 const supported_platforms = {
-	'linux': {name: 'Debian/Ubuntu', network_interface_terminal: 'wlan1', network_interface_mesh: 'wlan0'}, 
+	'linux': {name: 'Debian/Ubuntu', network_interface_terminal: (LITE_VERSION ? 'eth0' : 'wlan1'), network_interface_mesh: 'wlan0'}, 
 	'win32': {name: 'Windows 32/64', network_interface_terminal: '', network_interface_mesh: ''},
 	'darwin': {name: 'MacOS', network_interface_terminal: 'en0', network_interface_mesh: 'en0'},
 };
