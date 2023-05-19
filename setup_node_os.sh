@@ -61,6 +61,8 @@ sudo ifconfig bat0 up
 # Restart DHCP now bridge and mesh network are up
 sudo dhclient -r br0
 sudo dhclient br0
+# Run Alfred deamon
+sudo alfred -i br0 -m -p 5 &> /dev/null &
 END
 
 chmod +x ~/start-batman-adv.sh
@@ -69,7 +71,6 @@ echo 'batman-adv' | sudo tee --append /etc/modules
 sudo tee /etc/rc.local << END
 #!/bin/sh -e
 /home/tractorok/start-batman-adv.sh &
-sudo alfred -i br0 -m -p 5 &> /dev/null &
 cd /home/tractorok/mesh-chatting
 su tractorok -c 'sleep 8 && npm start &'
 exit 0
