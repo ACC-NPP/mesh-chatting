@@ -11,7 +11,7 @@ const supported_platforms = {
 	'darwin': {name: 'MacOS', network_interface_terminal: 'en0', network_interface_mesh: 'en0'},
 };
 const history = {messages: {}, events: {}};
-let broadcast_target_nodes; // mesh node: name -> ipv6 url
+let broadcast_target_nodes; // mesh name (dev stage) or mac address (prod stage): name -> ipv6 url
 async function get_my_ipv(version, interface) {
 	let process_get_ip = () => {
 		return new Promise((resolve, reject) => {
@@ -94,6 +94,22 @@ async function get_alfred() {
 	};
 	return await process_get_alfred();
 }
+async function get_broadcast_target_nodes() {
+	const alfred_text = await get_alfred();
+	const data_points = JSON.parse(`[${alfred_text.slice(0,-1).replaceAll('", "', '": "')}]`);
+	const result = {};
+	for (index in data_points) {
+		const data_point = data_points[index];
+		const mac_address = Object.keys(data_point)[0];
+		const value = data_point[mac_address];
+		if (value.indexOf('fe80::') !== 0)
+			continue;
+		const {network_interface_mesh} = supported_platforms[process.platform];
+		result[mac_address] = `http://[${value}%${network_interface_mesh}]:${port}/`;
+	}
+	console.log(result);
+	return result;
+}
 async function curl(url) {
 	const process_curl = () => {
 		return new Promise((resolve, reject) => {
@@ -169,7 +185,7 @@ async function run() {
 		'node3': `http://[${ipv6}]:5003/`,
 		'node4': `http://[${ipv6}]:5004/`,
 		'node5': `http://[${ipv6}]:5005/`,
-	} : {}; // TODO: implement target nodes scan for PROD_STAGE
+	} : await get_broadcast_target_nodes();
 	let client = null;
 	const mesh_server = http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
@@ -186,6 +202,8 @@ async function run() {
 			const message = parts[1];
 			const origin_hostname = parts[2];
 			history.messages[id] = {origin_hostname: decodeURIComponent(origin_hostname), message: decodeURIComponent(message)};
+			if (!DEV_STAGE)
+				broadcast_target_nodes = await get_broadcast_target_nodes();
 			for (let node in broadcast_target_nodes)
 				await wrap_curl(`${broadcast_target_nodes[node]}broadcast?${id}&${message}&${origin_hostname}`);
 			client && client.write('data: refresh\n\n');
