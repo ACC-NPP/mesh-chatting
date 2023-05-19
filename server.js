@@ -52,6 +52,50 @@ async function get_my_hostname() {
 	};
 	return await process_get_hostname();
 }
+const alfred_hostname_id = 70;
+const alfred_ipv6_id = 71;
+async function register_host_in_alfred() {
+	let process_register_host = () => {
+		return new Promise((resolve, reject) => {
+			function handle_register_host(error, stdout, stderr) {
+				if (error || stderr) {
+					stderr && console.log(`stderr: ${stderr}`);
+					error && console.log(`error: ${error.message}`);
+					reject(stderr);
+				} else {
+					let result = stdout.split('\n')[0];
+					console.log(`stdout: ${result}`);
+					resolve(result);
+				}
+			}
+			const register_hostname = `hostname | tr -d '\n' | sudo alfred -s ${alfred_hostname_id}`;
+			const register_ipv6 = `ifconfig wlan0 | grep "inet6 " | awk '{print $2}' | tr -d '\n' | sudo alfred -s ${alfred_ipv6_id}`;
+			exec(`${register_hostname} && ${register_ipv6}`, handle_register_host);
+		});
+	};
+	return await process_register_host();
+}
+async function get_alfred() {
+	let process_get_alfred = () => {
+		return new Promise((resolve, reject) => {
+			function handle_get_alfred(error, stdout, stderr) {
+				if (error || stderr) {
+					stderr && console.log(`stderr: ${stderr}`);
+					error && console.log(`error: ${error.message}`);
+					reject(stderr);
+				} else {
+					let result = stdout.split('\n')[0];
+					console.log(`stdout: ${result}`);
+					resolve(result);
+				}
+			}
+			const get_hostnames = `sudo alfred -r ${alfred_hostname_id}`;
+			const get_ipv6s = `sudo alfred -r ${alfred_ipv6_id}`;
+			exec(`${get_hostnames} && ${get_ipv6s}`, handle_get_alfred);
+		});
+	};
+	return await process_get_alfred();
+}
 async function curl(url) {
 	const process_curl = () => {
 		return new Promise((resolve, reject) => {
@@ -92,6 +136,11 @@ function get_broadcast_target_nodes_table() {
 	return result;
 }
 async function run() {
+	if (!DEV_STAGE) {
+		await register_host_in_alfred();
+		setInterval(register_host_in_alfred, 5 * 60 * 1000); // run every 5 minutes to make Alfred remember it
+	}
+
 	async function wrap_curl(url) {
 		let text = null;
 		try {
@@ -360,6 +409,16 @@ async function run() {
 			client && client.write('data: callback\n\n');
 			res.writeHead(200, { "Content-Type": "text/html" });
 			res.end('done');
+		}
+		else if (apiMethod === '/alfred') {
+			res.writeHead(200, { "Content-Type": "text/html" });
+			if (DEV_STAGE) {
+				res.end('impossible on dev stage');
+				return;
+			}
+			const alfred = await get_alfred();
+			console.log(alfred);
+			res.end(alfred);
 		}
 		else {
 			res.writeHead(404, { 'Content-Type': 'text/html' });
