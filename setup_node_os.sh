@@ -62,7 +62,10 @@ sudo ifconfig bat0 up
 sudo dhclient -r br0
 sudo dhclient br0
 # Run Alfred deamon
-sudo alfred -i br0 -m -p 5 &> /dev/null &
+sudo alfred -i br0 -m -p 5 > /dev/null &
+# Run Web Service
+cd /home/tractorok/mesh-chatting
+npm start &
 END
 
 chmod +x ~/start-batman-adv.sh
@@ -71,8 +74,6 @@ echo 'batman-adv' | sudo tee --append /etc/modules
 sudo tee /etc/rc.local << END
 #!/bin/sh -e
 /home/tractorok/start-batman-adv.sh &
-cd /home/tractorok/mesh-chatting
-su tractorok -c 'sleep 8 && npm start &'
 exit 0
 END
 
