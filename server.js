@@ -2,13 +2,14 @@ const http = require('http');
 const uuid = require('ordered-uuid-v4-fixed');
 const {exec} = require('child_process');
 const standard_port = 5555;
-const port = process.env.PORT || standard_port; //  work on custom port at dev stage
-const supported_platforms = {
-	'linux': {name: 'Debian/Ubuntu', stage: 'prod', network_interface_terminal: 'wlan1', network_interface_mesh: 'wlan0'}, 
-	'win32': {name: 'Windows 32/64', stage: 'test', network_interface_terminal: '', network_interface_mesh: ''},
-	'darwin': {name: 'MacOS', stage: 'dev', network_interface_terminal: 'en0', network_interface_mesh: 'en0'},
-};
+const port = parseInt(process.env.PORT || standard_port); //  work on custom port at dev stage
+const DEV_STAGE = port !== standard_port;
 const {LOCAL_RUN} = process.env;
+const supported_platforms = {
+	'linux': {name: 'Debian/Ubuntu', network_interface_terminal: 'wlan1', network_interface_mesh: 'wlan0'}, 
+	'win32': {name: 'Windows 32/64', network_interface_terminal: '', network_interface_mesh: ''},
+	'darwin': {name: 'MacOS', network_interface_terminal: 'en0', network_interface_mesh: 'en0'},
+};
 const history = {messages: {}, events: {}};
 let broadcast_target_nodes; // mesh node: name -> ipv6 url
 async function get_my_ipv(version, interface) {
@@ -111,17 +112,17 @@ async function run() {
 	if (!(process.platform in supported_platforms)) {
 		process.exit(1);
 	}
-	const {name, stage, network_interface_terminal, network_interface_mesh} = supported_platforms[process.platform];
-	console.log(`platform detected: ${process.platform} (${name}), stage ${stage}`);
+	const {name, network_interface_terminal, network_interface_mesh} = supported_platforms[process.platform];
+	console.log(`platform detected: ${process.platform} (${name}), ${DEV_STAGE ? 'dev' : 'prod'} stage`);
 	const ipv4 = LOCAL_RUN ? '127.0.0.1' : await get_my_ipv(4, network_interface_terminal);
 	const ipv6 = LOCAL_RUN ? '::1' : await get_my_ipv(6, network_interface_mesh);
-	broadcast_target_nodes = {
+	broadcast_target_nodes = DEV_STAGE ? {
 		'node1': `http://[${ipv6}]:5001/`,
 		'node2': `http://[${ipv6}]:5002/`,
 		'node3': `http://[${ipv6}]:5003/`,
 		'node4': `http://[${ipv6}]:5004/`,
 		'node5': `http://[${ipv6}]:5005/`,
-	};
+	} : {}; // TODO: implement target nodes scan for PROD_STAGE
 	let client = null;
 	const mesh_server = http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
@@ -160,7 +161,7 @@ async function run() {
 		if (apiMethod === '/') {
 			res.writeHead(200, { "Content-Type": "text/html; charset=UTF-8" });
 			res.end(`
-				<h2>${await get_my_hostname()}</h2>
+				<h2>${await get_my_hostname()} @ ${DEV_STAGE ? 'dev' : 'prod'} stage</h2>
 				<h3>terminal ipv4 = ${ipv4} mesh ipv6 = ${ipv6} port = ${port}</h3>
 				<p>${await self_test()}</p>
 				<p>${get_broadcast_target_nodes_table()}</p>
