@@ -96,7 +96,8 @@ async function get_alfred() {
 }
 async function get_broadcast_target_nodes() {
 	const alfred_text = await get_alfred();
-	const data_points = JSON.parse(`[${alfred_text.slice(0,-1).replaceAll('", "', '": "')}]`);
+	const data_points = JSON.parse(`[${alfred_text.slice(0,-2).replaceAll('", "', '": "')}]`);
+	// slice(0,-2) to delete 2 last symbols: ',\n'. then it will be correct json
 	const result = {};
 	for (index in data_points) {
 		const data_point = data_points[index];
