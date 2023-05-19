@@ -30,8 +30,8 @@ sudo batctl gw_mode client
 # Activates batman-adv interfaces
 sudo ifconfig wlan0 up
 sudo ifconfig bat0 up
-# Run Alfred deamon ? change inerface br0 by bat0 or wlan0 ?
-#sudo alfred -i bat0 -m -p 5 > /dev/null &
+# Run Alfred deamon
+sudo alfred -i wlan0 -m -p 5 > /dev/null &
 # Run Web Service
 cd /home/tractorok/mesh-chatting
 LITE_VERSION=true npm start &

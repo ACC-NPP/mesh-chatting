@@ -62,7 +62,7 @@ sudo ifconfig bat0 up
 sudo dhclient -r br0
 sudo dhclient br0
 # Run Alfred deamon
-sudo alfred -i br0 -m -p 5 > /dev/null &
+sudo alfred -i wlan0 -m -p 5 > /dev/null &
 # Run Web Service
 cd /home/tractorok/mesh-chatting
 npm start &
