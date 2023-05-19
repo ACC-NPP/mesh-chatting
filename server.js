@@ -363,7 +363,7 @@ async function run() {
 						if (!message)
 							return;
 						try {
-							const response = await fetch(location.href + 'send?' + encodeURIComponent(message));
+							const response = await fetch(location.href + 'send?' + CombUUID.encode() + '&' + encodeURIComponent(message));
 						}
 						catch (e) {
 							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
@@ -405,8 +405,10 @@ async function run() {
 		}
 		else if (apiMethod === '/send') {
 			res.writeHead(200, { "Content-Type": "text/html; charset=UTF-8" });
-			const message = apiParameter;
-			const result = await wrap_curl(`${getAddressUrl(mesh_server)}broadcast?${uuid.generate()}&${message}&${encodeURIComponent(await get_my_hostname())}`);
+			const parts = apiParameter.split('&');
+			const id = parts[0];
+			const message = parts[1];			
+			const result = await wrap_curl(`${getAddressUrl(mesh_server)}broadcast?${id}&${message}&${encodeURIComponent(await get_my_hostname())}`);
 			res.end(result);
 		}
 		else if (apiMethod === '/subscribe') {
