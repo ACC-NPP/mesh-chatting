@@ -63,13 +63,12 @@ async function register_host_in_alfred() {
 					error && console.log(`error: ${error.message}`);
 					reject(stderr);
 				} else {
-					let result = stdout.split('\n')[0];
-					console.log(`stdout: ${result}`);
-					resolve(result);
+					console.log(`stdout: ${stdout}`);
+					resolve(stdout);
 				}
 			}
-			const register_hostname = `hostname | tr -d '\n' | sudo alfred -s ${alfred_hostname_id}`;
-			const register_ipv6 = `ifconfig wlan0 | grep "inet6 " | awk '{print $2}' | tr -d '\n' | sudo alfred -s ${alfred_ipv6_id}`;
+			const register_hostname = `hostname | tr -d "\n" | sudo alfred -s ${alfred_hostname_id}`;
+			const register_ipv6 = `ifconfig wlan0 | grep "inet6 " | awk '{print $2}' | tr -d "\n" | sudo alfred -s ${alfred_ipv6_id}`;
 			exec(`${register_hostname} && ${register_ipv6}`, handle_register_host);
 		});
 	};
@@ -84,9 +83,8 @@ async function get_alfred() {
 					error && console.log(`error: ${error.message}`);
 					reject(stderr);
 				} else {
-					let result = stdout.split('\n')[0];
-					console.log(`stdout: ${result}`);
-					resolve(result);
+					console.log(`stdout: ${stdout}`);
+					resolve(stdout);
 				}
 			}
 			const get_hostnames = `sudo alfred -r ${alfred_hostname_id}`;
