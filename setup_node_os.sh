@@ -5,6 +5,7 @@ sudo n latest
 hash -r
 sudo apt install dnsmasq
 sudo apt-get install -y batctl
+sudo apt-get install -y alfred
 sudo apt-get install -y bridge-utils
 
 sudo raspi-config nonint do_wifi_country RU
@@ -68,6 +69,7 @@ echo 'batman-adv' | sudo tee --append /etc/modules
 sudo tee /etc/rc.local << END
 #!/bin/sh -e
 /home/tractorok/start-batman-adv.sh &
+sudo alfred -i br0 -m -p 5 &> /dev/null &
 cd /home/tractorok/mesh-chatting
 su tractorok -c 'sleep 8 && npm start &'
 exit 0
