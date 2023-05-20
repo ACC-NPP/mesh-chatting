@@ -77,4 +77,7 @@ sudo tee /etc/rc.local << END
 exit 0
 END
 
+cd /home/tractorok/mesh-chatting
+npm install
+
 sudo reboot
