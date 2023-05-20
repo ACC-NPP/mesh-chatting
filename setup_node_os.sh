@@ -8,6 +8,7 @@ sudo apt-get install -y batctl
 sudo apt-get install -y alfred
 sudo apt-get install -y bridge-utils
 
+# WARNING: this is a OS-specific line, should be different for different OSes, for example RPI OS, OrangePi OS, TinkeOS, DietPi, Armbian etc.
 sudo raspi-config nonint do_wifi_country RU
 
 sudo tee /etc/network/interfaces.d/wlan0 << END
