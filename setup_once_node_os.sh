@@ -37,7 +37,7 @@ sudo alfred -i wlan0 -m -p 5 > /dev/null &
 sleep 2
 # Run Web Service
 cd /home/tractorok/mesh-chatting
-LITE_VERSION=true npm start &
+npm start &
 END
 
 chmod +x ~/start-batman-adv.sh
