@@ -33,7 +33,7 @@ async function get_my_ipv(version, interface) {
 	};
 	return await process_get_ip();
 }
-async function get_iperf(params) {
+async function get_iperf(ip, direct) {
 	let process_get_iperf = () => {
 		return new Promise((resolve, reject) => {
 			function handle_get_iperf(error, stdout, stderr) {
@@ -42,12 +42,13 @@ async function get_iperf(params) {
 					error && console.log(`error: ${error.message}`);
 					reject(stderr);
 				} else {
-					let result = stdout.split('\n')[0].split(',')[8];
+					const result = stdout.split('\n')[0];
+					const text = new Intl.NumberFormat("ru-RU").format(parseInt(result.split(',')[8])) + ' bps';
 					console.log(`stdout: ${result}`);
-					resolve(result);
+					resolve(text);
 				}
 			}
-			exec(`iperf ${params}`, handle_get_iperf);
+			exec(`iperf -V -y C ${direct ? '' : '-R '}-c ${ip}`, handle_get_iperf);
 		});
 	};
 	return await process_get_iperf();
@@ -253,8 +254,8 @@ async function run() {
 				<div>
 					<input id="ipvx" value="::1"><input id="port" value="5555">
 					<button onclick="onclick_ping();">ping</button>
-					<button onclick="onclick_speedtest(true);">speedtest download</button>
-					<button onclick="onclick_speedtest(false);">speedtest upload</button>
+					<button onclick="onclick_speedtest(true);">speedtest download</button><span id="download_result"></span>
+					<button onclick="onclick_speedtest(false);">speedtest upload</button><span id="upload_result"></span>
 				</div>
 				<p><input id="message" onkeydown="if (event.key === 'Enter') onclick_send();"><button onclick="onclick_send();">send</button></p>
 				<p>chat history <button onclick="onclick_refresh();">refresh</button></p>
@@ -346,8 +347,10 @@ async function run() {
 							return;
 						}
 						try {
+							const result = document.getElementById(direct ? 'download_result' : 'upload_result');
+							result.textContent = '...';
 							const response = await fetch(location.href + 'iperf-' + (direct ? 'direct' : 'reverse') + '?' + ipvx);
-							alert(await response.text());
+							result.textContent = await response.text();
 						}
 						catch(e) {
 							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
@@ -437,13 +440,13 @@ async function run() {
 		}
 		else if (apiMethod === '/iperf-direct') {
 			res.writeHead(200, { "Content-Type": "text/html" });
-			const result = await get_iperf(`-V -y C -c ${apiParameter}`);
-			res.end(new Intl.NumberFormat("ru-RU").format(parseInt(result)) + ' bps');
+			const result = await get_iperf(apiParameter, true);
+			res.end(result);
 		}
 		else if (apiMethod === '/iperf-reverse') {
 			res.writeHead(200, { "Content-Type": "text/html" });
-			const result = await get_iperf(`-V -y C -R -c ${apiParameter}`);
-			res.end(new Intl.NumberFormat("ru-RU").format(parseInt(result)) + ' bps');
+			const result = await get_iperf(apiParameter, false);
+			res.end(result);
 		}
 		else if (apiMethod === '/history') {
 			res.writeHead(200, { "Content-Type": "application/json" });
