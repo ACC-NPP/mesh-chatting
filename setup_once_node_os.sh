@@ -5,6 +5,7 @@ sudo n latest
 hash -r
 sudo apt-get install -y batctl
 sudo apt-get install -y alfred
+sudo apt-get install -y iperf
 
 # WARNING: this is a OS-specific line, should be different for different OSes, for example RPI OS, OrangePi OS, TinkeOS, DietPi, Armbian etc.
 sudo raspi-config nonint do_wifi_country RU
@@ -35,6 +36,8 @@ sudo ifconfig bat0 up
 sleep 4
 sudo alfred -i wlan0 -m -p 5 > /dev/null &
 sleep 2
+# Run iperf deamon
+iperf -s -V -D
 # Run Web Service
 cd /home/tractorok/mesh-chatting
 npm start &
