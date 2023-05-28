@@ -33,6 +33,25 @@ async function get_my_ipv(version, interface) {
 	};
 	return await process_get_ip();
 }
+async function get_iperf(params) {
+	let process_get_iperf = () => {
+		return new Promise((resolve, reject) => {
+			function handle_get_iperf(error, stdout, stderr) {
+				if (error || stderr) {
+					stderr && console.log(`stderr: ${stderr}`);
+					error && console.log(`error: ${error.message}`);
+					reject(stderr);
+				} else {
+					let result = stdout.split('\n')[0].split(',')[8];
+					console.log(`stdout: ${result}`);
+					resolve(result);
+				}
+			}
+			exec(`iperf ${params}`, handle_get_iperf);
+		});
+	};
+	return await process_get_iperf();
+}
 async function get_my_hostname() {
 	let process_get_hostname = () => {
 		return new Promise((resolve, reject) => {
@@ -234,6 +253,8 @@ async function run() {
 				<div>
 					<input id="ipvx" value="::1"><input id="port" value="5555">
 					<button onclick="onclick_ping();">ping</button>
+					<button onclick="onclick_speedtest(true);">speedtest download</button>
+					<button onclick="onclick_speedtest(false);">speedtest upload</button>
 				</div>
 				<p><input id="message" onkeydown="if (event.key === 'Enter') onclick_send();"><button onclick="onclick_send();">send</button></p>
 				<p>chat history <button onclick="onclick_refresh();">refresh</button></p>
@@ -312,6 +333,21 @@ async function run() {
 						try {
 							const ip = ipvx.indexOf(':') >= 0 ? '[' + ipvx + ']' : ipvx;
 							const response = await fetch(location.href + 'ping?http://' + ip + ':' + port + '/');
+						}
+						catch(e) {
+							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
+						}
+						await onclick_refresh();
+					}
+					async function onclick_speedtest(direct) {
+						const ipvx = document.getElementById('ipvx').value;
+						if (ipvx.indexOf(':') < 0) {
+							alert('speedtest works only for ipv6 addresses. aborted.');
+							return;
+						}
+						try {
+							const response = await fetch(location.href + 'iperf-' + (direct ? 'direct' : 'reverse') + '?' + ipvx);
+							alert(await response.text());
 						}
 						catch(e) {
 							history.errors[CombUUID.encode()] = e.message + ' >> ' + e.stack;
@@ -398,6 +434,16 @@ async function run() {
 			const text = result.message ? result.message : result;
 			history.events[uuid.generate()] = text;
 			res.end(text);
+		}
+		else if (apiMethod === '/iperf-direct') {
+			res.writeHead(200, { "Content-Type": "text/html" });
+			const result = await get_iperf(`-V -y C -c ${apiParameter}`);
+			res.end(new Intl.NumberFormat("ru-RU").format(parseInt(result)) + ' bps');
+		}
+		else if (apiMethod === '/iperf-reverse') {
+			res.writeHead(200, { "Content-Type": "text/html" });
+			const result = await get_iperf(`-V -y C -R -c ${apiParameter}`);
+			res.end(new Intl.NumberFormat("ru-RU").format(parseInt(result)) + ' bps');
 		}
 		else if (apiMethod === '/history') {
 			res.writeHead(200, { "Content-Type": "application/json" });
