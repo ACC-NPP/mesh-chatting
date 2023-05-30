@@ -240,7 +240,7 @@ async function run() {
 			res.end(`unknown command`);	
 		}
 	}).listen(port, ipv6, () => console.log(`run at ${getAddressDescription(mesh_server)}`));
-	const terminal_server = http.createServer(async (req, res) => {
+	const terminal_server = !ipv4 ? null : http.createServer(async (req, res) => {
 		const urlParts = req.url.split('?');
 		const apiMethod = urlParts[0];
 		const apiParameter = urlParts[1];
@@ -493,5 +493,7 @@ async function run() {
 			res.end(`page not found`);
 		}
 	}).listen(port, ipv4, () => console.log(`run at ${getAddressDescription(terminal_server)}`));
+	if (!terminal_server)
+		console.log('no ipv4 connection found, mesh node run in autonomous mode (without terminal_server).');
 }
 run();
